@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Alerta Brasil</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    header {
+      background-color: #8b0000;
+      color: white;
+      padding: 1rem;
+      font-size: 1.5rem;
+    }
+    #map {
+      height: 400px;
+      width: 90%;
+      margin: 20px auto;
+    }
+    #search {
+      width: 80%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 1rem;
+    }
+    #btnNotificacoes {
+      background-color: #f1c40f;
+      border: none;
+      color: black;
+      padding: 10px 20px;
+      font-size: 1rem;
+      margin: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    footer {
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+  <header>🚨 Alerta Brasil</header>
+
+  <input type="text" id="search" placeholder="🔍 Buscar por cidade ou estado...">
+  <button id="btnNotificacoes">🔔 Ativar Notificações</button>
+
+  <div id="map"></div>
+
+  <footer>
+    © 2025 Alerta Brasil • Dados: Defesa Civil & INMET •<br/>
+    Desenvolvido por @bhgsanttos 🧯
+  </footer>
+
+  <script>
+    const map = L.map('map').setView([-14.2350, -51.9253], 4);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    // Carregar dados da Defesa Civil com proxy CORS
+    async function carregarAlertas() {
+      try {
+        const resposta = await fetch('https://corsproxy.io/?https://apiprevmet3.inmet.gov.br/avisos');
+        const dados = await resposta.json();
+
+        dados.forEach(alerta => {
+          const { latitude, longitude, descricao } = alerta;
+
+          if (latitude && longitude) {
+            L.marker([latitude, longitude])
+              .addTo(map)
+              .bindPopup(`<strong>Alerta:</strong> ${descricao}`);
+          }
+        });
+      } catch (erro) {
+        alert("Erro ao carregar dados da Defesa Civil.");
+        console.error(erro);
+      }
+    }
+
+    carregarAlertas();
+
+    // Notificações
+    document.getElementById("btnNotificacoes").addEventListener("click", () => {
+      Notification.requestPermission().then(status => {
+        if (status === "granted") {
+          new Notification("🔔 Notificações ativadas!", {
+            body: "Você receberá alertas importantes.",
+          });
+        } else {
+          alert("Você precisa permitir as notificações.");
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
